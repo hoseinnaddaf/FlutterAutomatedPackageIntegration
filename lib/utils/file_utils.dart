@@ -38,27 +38,39 @@ class FileUtils {
 
       appendLogMessage(Strings.flutterPubGetRunning);
 
-      final result = await Process.run(
-        'flutter',
-        ['pub', 'get'],
-        workingDirectory: Directory(projectPath).path,
-      );
+      try {
 
-      if (result.exitCode == 0) {
-        appendLogMessage(Strings.packageIntegrated);
-        appendLogMessage(Strings.apiKeyRequest);
+        final flutterCommand = Platform.isWindows ?  'flutter.bat' : 'flutter' ;
 
-        final apiKey = await promptForApiKey(context);
-        if (apiKey != null && apiKey.isNotEmpty) {
-          appendLogMessage(Strings.apiKeyProvided);
-          await PlatformConfig.configurePlatformSpecificSettings(projectPath, apiKey, appendLogMessage);
-          await addExampleWidget(projectPath, appendLogMessage);
-        } else {
-          appendLogMessage(Strings.noApiKeyProvided);
+        final result = await Process.run(
+          flutterCommand ,
+          ['pub', 'get'],
+          workingDirectory: Directory(projectPath).path,
+        );
+
+        if (result.exitCode == 0) {
+          appendLogMessage(Strings.packageIntegrated);
+          appendLogMessage(Strings.apiKeyRequest);
+
+          final apiKey = await promptForApiKey(context);
+          if (apiKey != null && apiKey.isNotEmpty) {
+            appendLogMessage(Strings.apiKeyProvided);
+            await PlatformConfig.configurePlatformSpecificSettings(
+                projectPath, apiKey, appendLogMessage);
+            await addExampleWidget(projectPath, appendLogMessage);
+          } else {
+            appendLogMessage(Strings.noApiKeyProvided);
+          }
         }
-      } else {
-        appendLogMessage('${Strings.errorTitle}: ${result.stderr}');
+        else {
+          appendLogMessage('${Strings.errorTitle}: ${result.stderr}');
+        }
       }
+      catch(e)
+    {
+      appendLogMessage('Exception Error : ${e.toString()}') ;
+    }
+
     } else {
       appendLogMessage(Strings.pubspecNotFound);
     }
